@@ -6,36 +6,43 @@ call vundle#begin()
 
 Plugin 'VundleVim/Vundle.vim'
 Plugin 'gneham/potion' "例子
-Plugin 'tmhedberg/SimpylFold' 
+Plugin 'tmhedberg/SimpylFold' "折叠插件
 Plugin 'vim-scripts/indentpython.vim' "python缩进插件
-Plugin 'scrooloose/nerdtree'
+Plugin 'scrooloose/nerdtree' "工程树目录插件
 Plugin 'bling/vim-airline'   "状态栏插件 另外需要下载powerline的字体
-Plugin 'altercation/vim-colors-solarized'
-Plugin 'matrix.vim--Yang'
+Plugin 'altercation/vim-colors-solarized'   "solarized配色方案插件
+Plugin 'matrix.vim--Yang'   "例子插件,黑客帝国
 Plugin 'Yggdroot/indentLine'   "垂直对齐线插件
 Plugin 'rkulla/pydiction'  "python自动补全
+Plugin 'taglist.vim'  
 
 call vundle#end()
 
-filetype on "侦测文件类型
+"filetype on "侦测文件类型
 filetype plugin on "载入文件类型插件
 filetype plugin indent on
 
 "Enable folding
-set foldmethod=indent
-set foldlevel=99
+"set foldenable    "打开折叠功能，如果foldmethod选项已设置，则默认已经打开,无须在设置此选项
+"set foldcolunms=3 "设置折叠可视线索
 
-let g:SimpylFold_docstring_preview=1
-
-"设置文件类型
+"设置文件类型,vim会自动检测python，c等语言的类型，此处不用设置
 "au BufNewFile,BufRead *.py set filetype=python
+
 au BufNewFile,BufRead *.py exec ":call FilePython()" 
+
+"折叠插件配置
+autocmd BufWinEnter *.py setlocal foldexpr=SimpylFold(v:lnum) foldmethod=expr
+autocmd BufWinLeave *.py setlocal foldexpr< foldmethod< 
+
+
 set tabstop=4  
 set softtabstop=4 
 set shiftwidth=4 
 set expandtab 
 set autoindent 
 set fileformat=unix 
+
 
 function! FilePython()
     set tabstop=4  
@@ -46,6 +53,10 @@ function! FilePython()
     set fileformat=unix 
     setlocal makeprg=python\ % 
     set textwidth=110 
+    set foldmethod=indent  "定义折叠方式为indent,会自动折叠,有六中方式
+    set foldlevel=99  "控制可见的折叠的层次，只显示折叠层次小于等于参数的行的内容
+    let g:SimpylFold_docstring_preview=1 "python折叠插件配置
+    
     "配置python自动补全
     let g:pydiction_location = "~/.vim/bundle/pydiction/complete-dict"
 endfunction
@@ -61,13 +72,21 @@ au BufNewFile,BufRead *.js, *.html, *.css
 "let g:airline_theme="luna"
 let g:airline_powerline_fonts=1
 
-colorscheme murphy
-if has("gui_running")
-    colorscheme solarized
-endif
+"设置配色方案,solarized方案
+"if has("gui_running")
+"    set background=dark
+"    colorscheme solarized 
+"else
+"    set background=dark
+"endif
+set background=dark
+colorscheme murphy 
+
+"solarized方案提供了两种色调的主题，F5可以用来切换
+"call togglebg#map("<F7>")
+
 set guifont=DejaVu\ Sans\ Mono\ 15
 set guioptions=aegic
-set background=dark
 
 
 "新建.c,.h,.sh,java文件，自动插入文件头
@@ -96,15 +115,20 @@ function! SetTitle()
 endfunction
         
 
-set mouse=a
+"设置鼠标可用
+if has("mouse") 
+    set mouse-=a  "此时光标不能跟随鼠标移动，但是可以复制粘贴
+endif
+"set mouse=a  "设置在任何模式下光标可以跟随鼠标移动，但此时不能够复制粘贴
+
+set number
 set autowrite
 set autoread
 set cursorcolumn "突出显示当前列
 set cursorline "突出显示当前行
 set ruler "打开状态栏标尺 显示光标位置的行号和列号，每个窗口都有自己的标尺。如果窗口有状态行，标尺在那里显示。
-set magic "设置魔术
+set magic "设置魔术,用于正则表达式
 set backspace=2 "设置退格键在插入模式可用
-
 
 "禁止生成临时文件
 set nobackup
@@ -114,9 +138,13 @@ set incsearch
 "set highlight
 
 set laststatus=2
-set showmatch
+set showmatch  "高亮显示匹配的括号
+"去掉输入错误提示音
+set noerrorbells
+"隐藏缓冲区
+set hidden
 
-map <F2> :NERDTreeToggle<CR>        
+nnoremap <F2> :NERDTreeToggle<CR>        
 
 "映射全选+复制 ctrl+a
 "map <C-A> ggVG
@@ -124,12 +152,8 @@ map <F2> :NERDTreeToggle<CR>
 "vmap <C-c> "+y
 
 "去空行
-nnoremap <F3> :g/^\s*$/d<CR>
+nnoremap <F4> :g/^\s*$/d<CR>
 
-"去掉输入错误提示音
-set noerrorbells
-"隐藏缓冲区
-set hidden
 
 "配置垂直对齐线
 "let g:indentLine_enabled=0  
@@ -138,8 +162,30 @@ set hidden
 "let g:indentLine_concealcursor='vc'
 "let g:indentLine_concealleval=0
 "set list lcs=tab:\|\ 
-map <F4> :IndentLinesToggle<CR>
-map <F5> :make<CR>
+map <F6> :IndentLinesToggle<CR>  "开启和关闭垂直对其线
+
+map <F5> :make<CR>  编译程序快捷键
+
+nnoremap Y y$  "从新定义普通模式下Y的功能"
+
+
+set nowrapscan "禁止搜索绕回文件的开头 例如？和/
+"set wrapmargin=0 "设置一行的字符个数，以便自动插入换行符
+
+"自动补全(,[,{,',",<
+inoremap (  ()<Esc>i
+inoremap [  []<Esc>i
+"inoremap "  ""<Esc>i
+inoremap <  <><Esc>i
+
+
+"taglist插件配置
+let Tlist_Ctags_Cmd='ctags'
+let Tlist_Show_One_File=1
+let Tlist_Use_Right_Window=1
+let Tlist_Exit_OnlyWindow=1
+let Tlist_WinWidth=28
+nnoremap <F3> :TlistToggle<CR>
 
 
 
